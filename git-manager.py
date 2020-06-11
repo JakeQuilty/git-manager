@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import yaml
 import sys
 from os import path
@@ -5,21 +8,23 @@ import tempfile
 from subprocess import check_output
 from os import listdir
 from os.path import isfile, join
-from shutil import copyfile
+import shutil
 import json
 import logging
 
+from repo import repo
+
 
 global LOGGER
+
+FAILED_REPOS = []
 
 MANDATORY_GENERAL_PARAMETERS = [
 	'pr_name',
 	'branch_name',
 	'commit_message',
 	'git_add',
-	'playbook_dir'
 ]
-
 
 def create_logger():
 	# create logger with 'spam_application'
@@ -32,7 +37,7 @@ def create_logger():
 	ch = logging.StreamHandler()
 	ch.setLevel(logging.ERROR)
 	# create formatter and add it to the handlers
-	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+	formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 	fh.setFormatter(formatter)
 	ch.setFormatter(formatter)
 	# add the handlers to the logger
@@ -45,11 +50,30 @@ def create_logger():
 def error_message(message):
 	LOGGER.error(message)
 	LOGGER.info("------------------ ENDING ------------------")
-	# print("ERROR: {}".format(message))
 	exit(1)
 
+# TODO add more coverage
+def check_valid_arguments(args):
+	if len(args) == 1 or len(args) > 2:
+		print("git-manager requires parameter 'action dir'")
+		print("Example: `git-manager ./actions/action_dir`")
+		LOGGER.debug("ERROR: git-manager requires parameter 'action dir'")
+		exit(1)
+
+def get_config(action_dir):
+	config_file_path = action_dir + "/config.yml"
+	# read the config content
+	config_content = open(config_file_path, 'r').read()
+	# create the python dictionary of the config, this will throw yaml 
+	# exception if the config does not meet yaml standards
+	config = yaml.load(config_content)
+
+	# validate mandatory config fields
+	#validate_config(config)				################################################
+	return config
+
 def validate_config(config):
-	LOGGER.debug("Starting to validate config")
+	LOGGER.info("Starting to validate config")
 	if 'orgs' not in config:
 		error_message("'orgs' was not provided in the config file")
 
@@ -60,146 +84,96 @@ def validate_config(config):
 	for mandatory_parameter in MANDATORY_GENERAL_PARAMETERS:
 		if mandatory_parameter not in general:
 			error_message("'{}' was not provided in the config file".format(mandatory_parameter))
-	LOGGER.debug("Successfully validated config")
-
-def get_repo_dir(tmp_folder, org, repo):
-	return "{}/{}/{}".format(tmp_folder, org, repo)
-
-def get_config_file_path():
-	LOGGER.debug("Starting to get config file path")
-	# default config file path
-	config_file_path = "git-manager-config.yml"
-	# it can be provided as an argument
-	if len(sys.argv) == 2:
-		config_file_path = sys.argv[1]
-	# validate the config file path actuall exists
-	if not path.exists(config_file_path):
-		error_message("'{}' does not exists or is not readable".format(config_file_path))
-	LOGGER.debug("Using config file: '{}'".format(config_file_path))
-	LOGGER.debug("Successfully retrieved config file")
-	return config_file_path
-
-def subprocess_command(command, working_dir):
-	LOGGER.info("executing: {}".format(" ".join(command)))
-	LOGGER.info(check_output(command, cwd=working_dir).decode('utf-8'))
-
-def git_command(working_dir, command, org, repo):
-	git_url = "https://github.com/{}/{}.git".format(org, repo)
-	repo_dir = get_repo_dir(working_dir, org, repo)
-	command = ['git', command, git_url, repo_dir]
-	subprocess_command(command, None)
-
-def git_clone(working_dir, org, repo):
-	git_command(working_dir, "clone", org, repo)
-
-def git_branch(working_dir, org, repo, branch_name):
-	command = ['git', 'branch', branch_name]
-	repo_dir = get_repo_dir(working_dir, org, repo)
-	subprocess_command(command, repo_dir)
-
-def git_checkout(working_dir, org, repo, branch_name):
-	command = ['git', 'checkout', branch_name]
-	repo_dir = get_repo_dir(working_dir, org, repo)
-	subprocess_command(command, repo_dir)
-
-def run_playbook(working_dir, org, repo, extra_vars):
-	command = ['ansible-playbook', 'run.yml']
-	if extra_vars is not None:
-		command.append('--extra-vars')
-		command.append(json.dumps(extra_vars))
-	repo_dir = get_repo_dir(working_dir, org, repo)
-	subprocess_command(command, repo_dir)
-
-def get_config():
-	config_file_path = get_config_file_path()
-	# read the config content
-	config_content = open(config_file_path, 'r').read()
-	# create the python dictionary of the config, this will throw yaml 
-	# exception if the config does not meet yaml standards
-	config = yaml.load(config_content)
-
-	# validate mandatory config fields
-	validate_config(config)
-	return config
+	LOGGER.info("Successfully validated config")
 
 def create_working_dir():
 	dir_path = tempfile.mkdtemp()
 	LOGGER.info("Created a tmp directory for cloning repos: " + dir_path)
 	return dir_path
 
-def clone_and_setup_repos(config, working_dir):
-	for org, value in config['orgs'].items():
+# creates a list of repo objects from the config
+def create_repo_list(config, working_dir):
+	repo_list = []
+	for curr_org, value in config['orgs'].items():
 		repos = value['repos']
-		for repo in repos:
-			LOGGER.info("Cloning repo '{}/{}' and copying over files located in playbook directory".format(org, repo))
-			git_clone(working_dir, org, repo)
-			branch_name = config['general']['branch_name']
-			# if we are creating branch then lets do it
-			if config['general'].get('create_branch') is True:
-				git_branch(working_dir, org, repo, branch_name)
-			# now checkout branch
-			git_checkout(working_dir, org, repo, branch_name)
+		for curr_repo in repos:
+			repo_list.append(repo(LOGGER, curr_org, curr_repo, working_dir))
+	return repo_list
 
-			playbook_dir = config['general']['playbook_dir']
-			# now copy over the playbook
-			playbook_files = [f for f in listdir(playbook_dir) if isfile(join(playbook_dir, f))]
-			for playbook_file in playbook_files:
-				repo_dir = get_repo_dir(working_dir, org, repo)
-				copyfile(playbook_dir + "/" + playbook_file, repo_dir + "/" + playbook_file)
-			LOGGER.info("Finished cloning repo '{}/{}'".format(org, repo))
+def update_repo(config, repo, action_dir):
+	LOGGER.info("STARTING: {}".format(repo.get_title()))
+	# clones the repo to working_dir(or whatever dir was specified on the repo's creation
+	LOGGER.info("Cloning repo '{}' to {}".format(repo.get_title(), repo.get_parent_dir()))
+	repo.git_clone()
 
-def update_repos(config, working_dir):
-	extra_vars = {}
-	if 'extra_vars' in config['general']:
-		extra_vars = config['general']['extra_vars']
-	LOGGER.debug("Extra Variables:", extra_vars)
+	# change branch
+	branch = config['general']['branch']['branch_name']
+	if config['general']['branch']['create_branch']:
+		LOGGER.info("Creating branch: {}".format(branch))
+		repo.git_branch(branch)
+	
+	LOGGER.info("Checking out branch: {}".format(branch))
+	repo.git_checkout(branch)
 
-	for organization, value in config['orgs'].items():
-		repos = value['repos']
-		for repo in repos:
-			LOGGER.info("Running 'run.yml' in '{}/{}'".format(organization, repo))
-			extra_vars['org'] = organization
-			extra_vars['repo'] = repo
-			run_playbook(working_dir, organization, repo, extra_vars)
-			LOGGER.info("Finished running 'run.yml' in '{}/{}'".format(organization, repo))
+	# run action file on repo
+	# this needs some serious thought and work.
+	LOGGER.info("Running action on: {}".format(repo.get_title()))
+	run_action(action_dir, repo.get_dir())
+	
+	# add files to commit that are specified in config
+	for to_add in config['general']['commit']['git_add']:
+		repo.git_add(to_add)
 
-def git_add(config, working_dir, org, repo):
-	# this should be a list
-	add_files = config['general']['git_add']
-	command = ['git', 'add']
-	command.extend(add_files)
-	repo_dir = get_repo_dir(working_dir, org, repo)
-	subprocess_command(command, repo_dir)
+	# commit
+	repo.git_commit(config['general']['commit']['commit_message'])
 
-def git_commit(config, working_dir, org, repo):
-	commit_message = config['general']['commit_message']
-	command = ['git', 'commit', '-m', commit_message]
-	repo_dir = get_repo_dir(working_dir, org, repo)
-	subprocess_command(command, repo_dir)
+	# push
+	repo.git_push()
 
-def git_push(config, working_dir, org, repo):
-	command = ['git', 'push', '--set-upstream', 'origin', config['general']['branch_name']]
-	repo_dir = get_repo_dir(working_dir, org, repo)
-	subprocess_command(command, repo_dir)
+	#pull request
+	#TODO
+	
+	# delete local repo
+	if config['general']['remove_repo']:
+		LOGGER.info("Removing local repo: {}".format(repo.get_dir()))
+		shutil.rmtree(repo.get_dir())
 
-def git_add_commit_push_repos(config, working_dir):
-	for org, value in config['orgs'].items():
-		repos = value['repos']
-		for repo in repos:
-			git_add(config, working_dir, org, repo)
-			git_commit(config, working_dir, org, repo)
-			git_push(config, working_dir, org, repo)
+def run_action(action_dir, repo_dir):
+	run_path = path.join(action_dir, "action")
+	command = [run_path, str(repo_dir)]
+	subprocess_command(command, None)
+
+def subprocess_command(command, working_dir):
+	LOGGER.info("Executing: {}".format(" ".join(command)))
+	command_output = check_output(command, cwd = working_dir).decode('utf-8')
+	if len(command_output) > 0:
+            LOGGER.info("Response:\n{}".format(command_output))
+
+def update_all_repos(config, repo_list, action_dir):
+	for curr_repo in repo_list:
+		try:
+			update_repo(config, curr_repo, action_dir)
+			LOGGER.info("---{} SUCCESS---".format(curr_repo.get_title()))
+		except:
+			LOGGER.info("---{} FAIL---".format(curr_repo.get_title()))
+			FAILED_REPOS.append(curr_repo)
 
 # at this point we should have cloned, created a branch
 # checked out this branch and copied over all of the files 
 # in the playbook dir into the repo directories
 
 def main():
-	config=get_config()
-	working_dir=create_working_dir()
-	clone_and_setup_repos(config, working_dir)
-	update_repos(config, working_dir)
-	git_add_commit_push_repos(config, working_dir)
+	check_valid_arguments(sys.argv)
+	action_dir = sys.argv[1]
+	config = get_config(action_dir)
+	working_dir = create_working_dir()
+	repo_list = create_repo_list(config, working_dir)
+	update_all_repos(config, repo_list, action_dir)
+	
+	### clean up
+		## delete tmp dir
+
+	# show completion message. failed repos and #. success. pr links. whether tmp dir is still present
 
 if __name__ == "__main__":
 	LOGGER = create_logger()

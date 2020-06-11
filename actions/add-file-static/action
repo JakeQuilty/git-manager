@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import shutil
+import sys
+import os
+import yaml
+
+from os import path
+from pathlib import Path
+
+def get_config(action_dir):
+	config_file_path = action_dir + "/config.yml"
+	config_content = open(config_file_path, 'r').read()
+	config = yaml.load(config_content)
+
+	return config
+
+def main():
+    # Path to current working directory
+    curr_dir = os.path.dirname(os.path.realpath(__file__))
+    config = get_config(curr_dir)
+    source_file = config['extra_vars']['source_file']
+    destination_file = config['extra_vars']['destination_file']
+    repo_local_dir = sys.argv[1]
+    
+    # If the destination file is in a file path
+    # Create the file path in the repo, if it doesn't exist
+    if destination_file.rfind("/") != -1:
+        destination_path = destination_file[0:destination_file.rfind("/")]
+        Path(path.join(repo_local_dir, destination_path)).mkdir(parents=True, exist_ok=True)
+
+    shutil.copy2(source_file, path.join(repo_local_dir, destination_file))
+
+if __name__ == "__main__":
+	main()
