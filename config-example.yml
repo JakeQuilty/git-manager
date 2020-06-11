@@ -20,5 +20,3 @@ general:
 
 # Variables needed in action file
 extra_vars:
-    source_file:
-    destination_file:
