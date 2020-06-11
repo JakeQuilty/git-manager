@@ -1,0 +1,25 @@
+# List orgs and repos here
+# config['orgs']['{your_org}']['repos']['{your_repo}']
+orgs:
+    JakeQuilty:
+        repos: [git-manager-test-01]
+  
+# General required configs here
+general:
+    branch:
+        branch_name: add-contributing
+        create_branch: yes
+    commit:
+        git_add:
+            - path/to/CONTRIBUTING.md
+        commit_message: Add CONTRIBUTING
+    pull_request:
+        pr_name: test-pr
+        create_pr: no
+    remove_repo: yes
+    remove_tmp_dir: no
+
+# Variables needed in action file
+extra_vars:
+    source_file: /path/to/git-manager/actions/add-file-static/CONTRIBUTING.md
+    destination_file: path/to/CONTRIBUTING.md
