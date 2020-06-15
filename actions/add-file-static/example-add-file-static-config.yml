@@ -20,10 +20,12 @@ general:
             - path/to/CONTRIBUTING.md
         commit_message: Add CONTRIBUTING
     pull_request:
-        pr_name: Add CONTRIBUTING.md
-        create_pr: no
+        create_pr: yes
+        title: Add CONTRIBUTING
+        body: Adds a CONTRIBUTING file to the repo
+        base: master
     remove_repo: yes
-    remove_tmp_dir: no
+    remove_tmp_dir: yes
 
 # Variables needed in action file
 extra_vars:
