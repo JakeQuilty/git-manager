@@ -137,7 +137,7 @@ def update_single_repo(config, repo, action_dir):
 		pr_title = config['general']['pull_request']['title']
 		pr_body = config['general']['pull_request']['body']
 		pr_base = config['general']['pull_request']['base']
-		
+
 		pr_link = repo.git_create_pull_request(pr_title, branch, pr_base, pr_body)
 
 		if pr_link is not None:
@@ -160,13 +160,32 @@ def update_all_repos(config, repo_list, action_dir):
 			update_single_repo(config, curr_repo, action_dir)
 			print("{}: SUCCESS".format(curr_repo.get_title()))
 			LOGGER.info("{}: SUCCESS\n".format(curr_repo.get_title()))
+			SUCCESFUL_REPOS.append(curr_repo.get_title())
 		except:
 			LOGGER.error("{}: FAIL\n".format(curr_repo.get_title()))
-			FAILED_REPOS.append(curr_repo)
+			FAILED_REPOS.append(curr_repo.get_title())
 
 		if config['general']['remove_repo']:
 			LOGGER.info("Removing local repo: {}\n".format(curr_repo.get_dir()))
 			shutil.rmtree(curr_repo.get_dir())
+
+def summary_message():
+	total_repos = len(SUCCESFUL_REPOS) + len(FAILED_REPOS)
+
+	success_string = "Success({suc}/{tot}):".format(suc = len(SUCCESFUL_REPOS), tot = total_repos)
+	for repo in SUCCESFUL_REPOS:
+		success_string = success_string + "\n{}".format(repo)
+
+	fail_string = "Fail({fail}/{tot}):".format(fail = len(FAILED_REPOS), tot = total_repos)
+	for repo in FAILED_REPOS:
+		fail_string = fail_string + "\n{}".format(repo)
+
+	pr_string = "Pull Requests:"
+	for link in PR_LINKS:
+		pr_string = pr_string + "\n{}".format(link)
+
+	return "SUMMARY:\n\n{success}\n\n{fail}\n\n{pr}".format(success = success_string, fail = fail_string, pr = pr_string)
+
 def main():
 	check_valid_arguments(sys.argv)
 	action_dir = sys.argv[1]
@@ -181,6 +200,9 @@ def main():
 		shutil.rmtree(working_dir)
 
 	# show completion message. failed repos and #. success. pr links. whether tmp dir is still present
+	summary = summary_message()
+	LOGGER.info(summary)
+	print("\n"+ summary)
 
 if __name__ == "__main__":
 	LOGGER = create_logger()
