@@ -1,7 +1,10 @@
+import json
 import os
+import requests
 from subprocess import check_output
 
 class repo:
+
     def __init__(self, logger, org, repo, tmp_dir):
         self.LOGGER = logger
         self.title = os.path.join(org,repo)
@@ -10,6 +13,7 @@ class repo:
         self.parent_dir = tmp_dir # parent dir of the cloned repo
         self.curr_dir = os.path.join(tmp_dir, self.repo) # dir of repo
         self.branch = "" # TODO: have this grab the branch name from API on instantiation
+        self.auth_info = self.get_auth_information() # 0: user, 1: auth_token
 
     def subprocess_command(self, command, working_dir):
         self.LOGGER.info("Executing: {}".format(" ".join(command)))
@@ -51,6 +55,41 @@ class repo:
     def git_push(self):
         command = ['git', 'push', '--set-upstream', 'origin', self.branch]
         self.subprocess_command(command, self.curr_dir)
+
+    def git_create_pull_request(self, pr_title, pr_head, pr_base, pr_body = None):
+        self.LOGGER.info("{}: Creating Pull Request... {} -> {}".format(self.get_title(), pr_head, pr_base))
+        BASE_URL = "https://api.github.com"
+        pr_api_url = "{base}/repos/{org_name}/{repo_name}/pulls".format(base = BASE_URL, org_name = self.org, repo_name = self.repo)
+        self.LOGGER.info("URL: {}".format(pr_api_url))
+
+        # Create payload
+        payload = {
+            "title": pr_title,
+            "body": pr_body,
+            "head": "{user}:{head}".format(user = self.auth_info[0], head = pr_head),
+            "base": pr_base,
+        }
+        self.LOGGER.info("Payload: {}".format(str(payload)))
+        
+        response = requests.post(pr_api_url, json = payload, auth = (self.auth_info[0], self.auth_info[1]))
+        self.LOGGER.info("Response: {}".format(response.text))
+        self.LOGGER.info("Statuse Code: {}".format(response.status_code))
+
+        if response.status_code != 201:
+            self.LOGGER.error("{}: pull request FAIL".format(self.get_title()))
+            return None
+
+	## TODO Throw an exception if pr fails!!
+        raw_response = json.loads(response.text)
+
+        return raw_response['html_url']
+
+    def get_auth_information(self):
+        user = os.getenv('GITHUB_USERNAME')
+        auth_token = os.getenv('GITHUB_AUTH_TOKEN')
+        if not user or not auth_token:
+            raise Exception("ERROR: GITHUB_USERNAME or GITHUB_AUTH_TOKEN not provided!")
+        return [user, auth_token]
 
     def get_dir(self):
         return str(self.curr_dir)
