@@ -1,8 +1,11 @@
 # List orgs and repos here
-# config['orgs']['{your_org}']['repos']['{your_repo}']
 orgs:
-    your-org:
-        repos: [your, repos]
+    your_org1:
+        repos:
+            - repo1
+            - repo2
+    your_org2:
+        repos: [repo1, repo2]
   
 # General required configs here
 general:
@@ -11,10 +14,12 @@ general:
         create_branch:
     commit:
         git_add:
-        commit_message: 
+        commit_message:
     pull_request:
-        pr_name:
         create_pr:
+        title:
+        body:
+        base:
     remove_repo:
     remove_tmp_dir:
 
