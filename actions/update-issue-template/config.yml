@@ -1,0 +1,28 @@
+# List orgs and repos here
+# config['orgs']['{your_org}']['repos']['{your_repo}']
+orgs:
+    your-org:
+        repos: [your, repos]
+  
+# General required configs here
+general:
+    branch:
+        branch_name:
+        create_branch:
+    commit:
+        git_add:
+        commit_message:
+    pull_request:
+        create_pr: no
+        title:
+        body:
+        base:
+    remove_repo:
+    remove_tmp_dir:
+
+# Variables needed in action file
+extra_vars:
+    # Path to template in repo
+    old_template_file:
+    # Path to local replacement
+    new_template_file:

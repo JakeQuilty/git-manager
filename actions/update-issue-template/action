@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import shutil
+import sys
+import os
+import yaml
+
+from os import path
+from pathlib import Path
+
+def get_config(action_dir):
+	config_file_path = action_dir + "/config.yml"
+	config_content = open(config_file_path, 'r').read()
+	config = yaml.load(config_content)
+
+	return config
+
+def main():
+    # Path to current working directory
+    curr_dir = os.path.dirname(os.path.realpath(__file__))
+    config = get_config(curr_dir)
+    repo_local_dir = sys.argv[1]
+    
+    old_template_path = config['extra_vars']['old_template_file']
+    repo_file_path = path.join(repo_local_dir, old_template_path)
+    new_template_path = config['extra_vars']['new_template_file']
+    
+    # Grab line 5 from the old template file
+    with open(repo_file_path, 'r') as file:
+        old_template = file.readlines()
+
+    labels_line = old_template[4]
+
+    # Copy new template into repo
+    shutil.copy2(new_template_path, repo_file_path)
+
+    # Replace the labels line(line 5) in new template with the old one
+    with open(repo_file_path, 'r') as file:
+        new_template = file.readlines()
+
+    new_template[4] = labels_line
+
+    with open(repo_file_path, 'w') as file:
+        file.writelines(new_template)
+
+if __name__ == "__main__":
+	main()
