@@ -1,0 +1,35 @@
+# List orgs and repos here
+# config['orgs']['{your_org}']['repos']['{your_repo}']
+orgs:
+    your_org1:
+        repos:          # can also be repos: [repo1, repo2]
+            - repo1
+            - repo2
+    your_org2:
+        repos:
+            - repo1
+            - repo2
+
+# General required configs here
+general:
+    branch:
+        branch_name: update-bug-template
+        create_branch: yes
+    commit:
+        git_add:
+            - .github/ISSUE_TEMPLATE/bug.md
+        commit_message: Update bug template
+    pull_request:
+        create_pr: yes
+        title: Update bug.md
+        body: Updates the bug issue template
+        base: master
+    remove_repo: yes
+    remove_tmp_dir: yes
+
+# Variables needed in action file
+extra_vars:
+    # Path to template in repo
+    old_template_file: .github/ISSUE_TEMPLATE/bug.md
+    # Path to local replacement
+    new_template_file: /local/path/to/git-manager-stuff/git-manager/actions/update-issue-template/bug.md
