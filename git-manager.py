@@ -18,6 +18,8 @@ from repo import repo
 global LOGGER
 
 FAILED_REPOS = []
+SUCCESFUL_REPOS = []
+PR_LINKS = []
 
 MANDATORY_GENERAL_PARAMETERS = [
 	'pr_name',
@@ -100,8 +102,8 @@ def create_repo_list(config, working_dir):
 			repo_list.append(repo(LOGGER, curr_org, curr_repo, working_dir))
 	return repo_list
 
-def update_repo(config, repo, action_dir):
-	LOGGER.info("STARTING: {}".format(repo.get_title()))
+def update_single_repo(config, repo, action_dir):
+	LOGGER.info("----- {} -----".format(repo.get_title()))
 	# clones the repo to working_dir(or whatever dir was specified on the repo's creation
 	LOGGER.info("Cloning repo '{}' to {}".format(repo.get_title(), repo.get_parent_dir()))
 	repo.git_clone()
@@ -119,7 +121,7 @@ def update_repo(config, repo, action_dir):
 	# this needs some serious thought and work.
 	LOGGER.info("Running action on: {}".format(repo.get_title()))
 	run_action(action_dir, repo.get_dir())
-	
+
 	# add files to commit that are specified in config
 	for to_add in config['general']['commit']['git_add']:
 		repo.git_add(to_add)
@@ -131,12 +133,15 @@ def update_repo(config, repo, action_dir):
 	repo.git_push()
 
 	#pull request
-	#TODO
-	
-	# delete local repo
-	if config['general']['remove_repo']:
-		LOGGER.info("Removing local repo: {}".format(repo.get_dir()))
-		shutil.rmtree(repo.get_dir())
+	if config['general']['pull_request']['create_pr']:
+		pr_title = config['general']['pull_request']['title']
+		pr_body = config['general']['pull_request']['body']
+		pr_base = config['general']['pull_request']['base']
+
+		pr_link = repo.git_create_pull_request(pr_title, branch, pr_base, pr_body)
+
+		if pr_link is not None:
+			PR_LINKS.append(pr_link)
 
 def run_action(action_dir, repo_dir):
 	run_path = path.join(action_dir, "action")
@@ -152,15 +157,34 @@ def subprocess_command(command, working_dir):
 def update_all_repos(config, repo_list, action_dir):
 	for curr_repo in repo_list:
 		try:
-			update_repo(config, curr_repo, action_dir)
-			LOGGER.info("---{} SUCCESS---".format(curr_repo.get_title()))
+			update_single_repo(config, curr_repo, action_dir)
+			print("{}: SUCCESS".format(curr_repo.get_title()))
+			LOGGER.info("{}: SUCCESS\n".format(curr_repo.get_title()))
+			SUCCESFUL_REPOS.append(curr_repo.get_title())
 		except:
-			LOGGER.info("---{} FAIL---".format(curr_repo.get_title()))
-			FAILED_REPOS.append(curr_repo)
+			LOGGER.error("{}: FAIL\n".format(curr_repo.get_title()))
+			FAILED_REPOS.append(curr_repo.get_title())
 
-# at this point we should have cloned, created a branch
-# checked out this branch and copied over all of the files 
-# in the playbook dir into the repo directories
+		if config['general']['remove_repo']:
+			LOGGER.info("Removing local repo: {}\n".format(curr_repo.get_dir()))
+			shutil.rmtree(curr_repo.get_dir())
+
+def summary_message():
+	total_repos = len(SUCCESFUL_REPOS) + len(FAILED_REPOS)
+
+	success_string = "Success({suc}/{tot}):".format(suc = len(SUCCESFUL_REPOS), tot = total_repos)
+	for repo in SUCCESFUL_REPOS:
+		success_string = success_string + "\n{}".format(repo)
+
+	fail_string = "Fail({fail}/{tot}):".format(fail = len(FAILED_REPOS), tot = total_repos)
+	for repo in FAILED_REPOS:
+		fail_string = fail_string + "\n{}".format(repo)
+
+	pr_string = "Pull Requests:"
+	for link in PR_LINKS:
+		pr_string = pr_string + "\n{}".format(link)
+
+	return "SUMMARY:\n\n{success}\n\n{fail}\n\n{pr}".format(success = success_string, fail = fail_string, pr = pr_string)
 
 def main():
 	check_valid_arguments(sys.argv)
@@ -170,10 +194,15 @@ def main():
 	repo_list = create_repo_list(config, working_dir)
 	update_all_repos(config, repo_list, action_dir)
 	
-	### clean up
-		## delete tmp dir
+	### clean up tmp dir
+	if config['general']['remove_tmp_dir']:
+		LOGGER.info("Removing tmp dir: {}".format(working_dir))
+		shutil.rmtree(working_dir)
 
 	# show completion message. failed repos and #. success. pr links. whether tmp dir is still present
+	summary = summary_message()
+	LOGGER.info(summary)
+	print("\n"+ summary)
 
 if __name__ == "__main__":
 	LOGGER = create_logger()
