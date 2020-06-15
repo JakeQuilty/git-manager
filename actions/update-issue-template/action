@@ -26,11 +26,13 @@ def main():
     repo_file_path = path.join(repo_local_dir, old_template_path)
     new_template_path = config['extra_vars']['new_template_file']
     
-    # Grab line 5 from the old template file
+    # Grab header(lines 1:7) from the old template file
     with open(repo_file_path, 'r') as file:
         old_template = file.readlines()
 
-    labels_line = old_template[4]
+    old_header = []
+    for x in range(0,6):
+        old_header.append(old_template[x])
 
     # Copy new template into repo
     shutil.copy2(new_template_path, repo_file_path)
@@ -39,7 +41,8 @@ def main():
     with open(repo_file_path, 'r') as file:
         new_template = file.readlines()
 
-    new_template[4] = labels_line
+    for x in range(0,6):
+        new_template[x] = old_header[x]
 
     with open(repo_file_path, 'w') as file:
         file.writelines(new_template)
