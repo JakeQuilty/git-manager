@@ -1,14 +1,11 @@
 # List orgs and repos here
-# config['orgs']['{your_org}']['repos']['{your_repo}']
 orgs:
     your_org1:
-        repos:          # can also be repos: [repo1, repo2]
-            - repo1
-            - repo2
-    your_org2:
         repos:
             - repo1
             - repo2
+    your_org2:
+        repos: [repo1, repo2]
 
 # General required configs here
 general:
@@ -32,4 +29,4 @@ extra_vars:
     # Path to template in repo
     old_template_file: .github/ISSUE_TEMPLATE/bug.md
     # Path to local replacement
-    new_template_file: /local/path/to/git-manager-stuff/git-manager/actions/update-issue-template/bug.md
+    new_template_file: /local/path/to/git-manager/actions/update-issue-template/bug.md

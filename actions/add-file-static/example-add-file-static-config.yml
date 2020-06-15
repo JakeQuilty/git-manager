@@ -1,15 +1,12 @@
 # List orgs and repos here
-# config['orgs']['{your_org}']['repos']['{your_repo}']
 orgs:
     your_org1:
-        repos:          # can also be repos: [repo1, repo2]
-            - repo1
-            - repo2
-    your_org2:
         repos:
             - repo1
             - repo2
-  
+    your_org2:
+        repos: [repo1, repo2]
+        
 # General required configs here
 general:
     branch:
