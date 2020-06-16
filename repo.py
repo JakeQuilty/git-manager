@@ -66,17 +66,17 @@ class repo:
         payload = {
             "title": pr_title,
             "body": pr_body,
-            "head": "{user}:{head}".format(user = self.auth_info[0], head = pr_head),
+            "head": pr_head,
             "base": pr_base,
         }
         self.LOGGER.info("Payload: {}".format(str(payload)))
         
         response = requests.post(pr_api_url, json = payload, auth = (self.auth_info[0], self.auth_info[1]))
-        self.LOGGER.info("Response: {}".format(response.text))
         self.LOGGER.info("Statuse Code: {}".format(response.status_code))
 
         if response.status_code != 201:
             self.LOGGER.error("{}: pull request FAIL".format(self.get_title()))
+            self.LOGGER.info("Response: {}".format(response.text))
             return None
 
 	## TODO Throw an exception if pr fails!!

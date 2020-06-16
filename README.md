@@ -111,6 +111,8 @@ extra_vars:
 There are two ways to set up your local environment to run the script, but
 either way you'll need a GitHub account and a
 [personal access token](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line).
+If the organizations that own the repos you are managing use SAML single sign-on(SSO),
+make sure to [authorize your personal access token](https://help.github.com/en/github/authenticating-to-github/authorizing-a-personal-access-token-for-use-with-saml-single-sign-on).
 
 ### Running using environment variables
 
