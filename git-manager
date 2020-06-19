@@ -1,32 +1,24 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import yaml
 import sys
 from os import path
 import tempfile
 from subprocess import check_output
-from os import listdir
-from os.path import isfile, join
 import shutil
-import json
 import logging
 
+from configuration import configuration
 from repo import repo
 
 
 global LOGGER
 
+DEFAULT_CONFIG_FILE_NAME = "config.yml"
+
 FAILED_REPOS = []
 SUCCESFUL_REPOS = []
 PR_LINKS = []
-
-MANDATORY_GENERAL_PARAMETERS = [
-	'pr_name',
-	'branch_name',
-	'commit_message',
-	'git_add',
-]
 
 def create_logger():
 	# create logger with 'spam_application'
@@ -49,44 +41,14 @@ def create_logger():
 	logger.info("Logger initialized")
 	return logger
 
-def error_message(message):
-	LOGGER.error(message)
-	LOGGER.info("------------------ ENDING ------------------")
-	exit(1)
-
 # TODO add more coverage
 def check_valid_arguments(args):
 	if len(args) == 1 or len(args) > 2:
 		print("git-manager requires parameter 'action dir'")
 		print("Example: `git-manager ./actions/action_dir`")
-		LOGGER.debug("ERROR: git-manager requires parameter 'action dir'")
+		LOGGER.error("Invalid arguments!")
+		LOGGER.info("------------------ ENDING ------------------")
 		exit(1)
-
-def get_config(action_dir):
-	config_file_path = action_dir + "/config.yml"
-	# read the config content
-	config_content = open(config_file_path, 'r').read()
-	# create the python dictionary of the config, this will throw yaml 
-	# exception if the config does not meet yaml standards
-	config = yaml.load(config_content)
-
-	# validate mandatory config fields
-	#validate_config(config)				################################################
-	return config
-
-def validate_config(config):
-	LOGGER.info("Starting to validate config")
-	if 'orgs' not in config:
-		error_message("'orgs' was not provided in the config file")
-
-	if 'general' not in config:
-		error_message("'general' was not provided in the config file")
-
-	general = config['general']
-	for mandatory_parameter in MANDATORY_GENERAL_PARAMETERS:
-		if mandatory_parameter not in general:
-			error_message("'{}' was not provided in the config file".format(mandatory_parameter))
-	LOGGER.info("Successfully validated config")
 
 def create_working_dir():
 	dir_path = tempfile.mkdtemp()
@@ -188,8 +150,13 @@ def summary_message():
 
 def main():
 	check_valid_arguments(sys.argv)
+
 	action_dir = sys.argv[1]
-	config = get_config(action_dir)
+	config_path = path.join(action_dir, DEFAULT_CONFIG_FILE_NAME)
+
+	config_obj = configuration(LOGGER, config_path)
+	config = config_obj.get_config()
+
 	working_dir = create_working_dir()
 	repo_list = create_repo_list(config, working_dir)
 	update_all_repos(config, repo_list, action_dir)
