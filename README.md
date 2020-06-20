@@ -4,9 +4,10 @@ Manage a large amount of GitHub repositories at once.
 
 ## Requirements
 
-- python >= 3.0.0
-- [requests](https://requests.readthedocs.io/en/master/)
-    - `python3 -m pip install requests`
+Install requirements:
+```
+pip3 install -r requirements.txt
+```
 
 ## How To Use
 
@@ -18,7 +19,6 @@ Manage a large amount of GitHub repositories at once.
 
     Example:
     ```
-    pwd -> /path/to/git-manager
     ./git-manager ./action/add-file-static
     ```
 
@@ -147,11 +147,11 @@ make sure to [authorize your personal access token](https://help.github.com/en/g
 
 ## Action Directory
 
-The script requires an action directory to be specified on startup. An action directory consists of, at the very minimum, a `config.yml` and an `action` script. Any other files necessary to the specific action should be kept in this directory.
+The script requires an action directory to be specified on startup. An action directory consists of, at the very minimum,
+ a `config.yml` and an `action` script. Any other files necessary to the specific action should be kept in this directory.
 
 The `action` script must be able to be executed with `./path/action`.
 
-The `action` script is passed the path to the current repo as a parameter. 
-
-- Ex `./actions/update-issue-template/action /tmp/path/to/tmpvgxmpptn/current-repo`
+`git-manager` passes the path to the current repo to `action` by setting the `GIT_MANAGER_CURR_REPO` environment
+variable, before calling the action.
  
