@@ -20,7 +20,7 @@ def main():
     # Path to current working directory
     curr_dir = os.path.dirname(os.path.realpath(__file__))
     config = get_config(curr_dir)
-    repo_local_dir = sys.argv[1]
+    repo_local_dir = os.environ["GIT_MANAGER_CURR_REPO"]
     
     old_template_path = config['extra_vars']['old_template_file']
     repo_file_path = path.join(repo_local_dir, old_template_path)
