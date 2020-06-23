@@ -12,7 +12,7 @@ from pathlib import Path
 def get_config(action_dir):
 	config_file_path = action_dir + "/config.yml"
 	config_content = open(config_file_path, 'r').read()
-	config = yaml.load(config_content)
+	config = yaml.load(config_content, Loader=yaml.SafeLoader)
 
 	return config
 

@@ -6,7 +6,7 @@ orgs:
             - repo2
     your_org2:
         repos: [repo1, repo2]
-
+        
 # General required configs here
 general:
     branch:
@@ -14,8 +14,8 @@ general:
         create_branch:
     commit:
         git_add:
-            - FILE_NAME.md
-        commit_message: 
+            - 
+        commit_message:
     pull_request:
         create_pr:
         title:
@@ -26,3 +26,7 @@ general:
 
 # Variables needed in action file
 extra_vars:
+    # CODEOWNERS file in repo
+    old_codeowners:
+    # Local path to CODEOWNERS to merge into repo's CODEOWNERS
+    new_codeowners:
