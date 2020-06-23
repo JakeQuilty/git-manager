@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import shutil
+import sys
+import os
+import yaml
+
+from os import path
+from pathlib import Path
+
+def get_config(action_dir):
+	config_file_path = action_dir + "/config.yml"
+	config_content = open(config_file_path, 'r').read()
+	config = yaml.load(config_content)
+
+	return config
+
+def main():
+    # Path to current working directory
+    curr_dir = os.path.dirname(os.path.realpath(__file__))
+    config = get_config(curr_dir)
+    repo_local_dir = os.environ["GIT_MANAGER_CURR_REPO"]
+    
+    repo_file_path = path.join(repo_local_dir, "LICENSE")
+    
+    with open(repo_file_path, 'r') as file:
+        license_file = file.readlines()
+
+    # I search for "Copyright {year}", to avoid getting the wrong index if that year is somewhere else
+    # In the Apache and MIT licenses "Copyright {year}" only exists in the spots we want to change
+    old_year_line = "Copyright {}".format(config['extra_vars']['from_year'])
+    new_year_line = "Copyright {}".format(config['extra_vars']['to_year'])
+
+    # Replace all instances of "Copyright {year}"
+    for index, curr_line in enumerate(license_file):
+        if old_year_line in curr_line:
+            license_file[index] = curr_line.replace(old_year_line, new_year_line)
+    
+    # Write changes to file
+    with open(repo_file_path, 'w') as file:
+        file.writelines(license_file)
+
+if __name__ == "__main__":
+	main()

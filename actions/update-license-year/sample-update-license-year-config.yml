@@ -1,0 +1,30 @@
+# List orgs and repos here
+orgs:
+  your_org1:
+      repos:
+          - repo1
+          - repo2
+  your_org2:
+      repos: [repo1, repo2]
+      
+# General required configs here
+general:
+    branch:
+        branch_name: test-license
+        create_branch: yes
+    commit:
+        git_add: 
+            - LICENSE
+        commit_message: update license
+    pull_request:
+        create_pr: no
+        title:
+        body:
+        base:
+    remove_repo: no
+    remove_tmp_dir: yes
+
+# Variables needed in action file
+extra_vars:
+    from_year: 2020
+    to_year: 2021
