@@ -1,0 +1,32 @@
+# List orgs and repos here
+orgs:
+    your_org1:
+        repos:
+            - repo1
+            - repo2
+    your_org2:
+        repos: [repo1, repo2]
+        
+# General required configs here
+general:
+    branch:
+        branch_name:
+        create_branch:
+    commit:
+        git_add:
+            - 
+        commit_message:
+    pull_request:
+        create_pr:
+        title:
+        body:
+        base:
+    remove_repo:
+    remove_tmp_dir:
+
+# Variables needed in action file
+extra_vars:
+    # CODEOWNERS file in repo
+    old_codeowners:
+    # Local path to CODEOWNERS to merge into repo's CODEOWNERS
+    new_codeowners:

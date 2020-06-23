@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import shutil
+import sys
+import os
+import yaml
+
+from os import path
+from pathlib import Path
+
+def get_config(action_dir):
+	config_file_path = action_dir + "/config.yml"
+	config_content = open(config_file_path, 'r').read()
+	config = yaml.load(config_content, Loader=yaml.SafeLoader)
+
+	return config
+
+def main():
+    # Path to current working directory
+    curr_dir = os.path.dirname(os.path.realpath(__file__))
+    config = get_config(curr_dir)
+    repo_local_dir = os.environ["GIT_MANAGER_CURR_REPO"]
+    
+    repo_file_path = path.join(repo_local_dir, config['extra_vars']['old_codeowners'])
+    local_file_path = config['extra_vars']['new_codeowners']
+
+    # If CODEOWNERS does not exist in repo
+    if not path.exists(repo_file_path):
+        # Make sure the path to where the CODEOWNERS will be copied exists,
+        # Otherwise create it
+        destination_path = repo_file_path[0:repo_file_path.rfind("/")]
+        Path(path.join(repo_local_dir, destination_path)).mkdir(parents=True, exist_ok=True)
+        # Copy local CODEOWNERS to repo
+        shutil.copy2(local_file_path, repo_file_path)
+        return
+    
+    # open both files
+    with open(repo_file_path, 'r') as old_file:
+        # co: codeowners
+        old_co_file = old_file.readlines()
+
+    co_to_return = old_co_file
+
+    with open(local_file_path, 'r') as new_file:
+        new_co_file = new_file.readlines()
+
+    # For each line in the new codeowners
+    for nindex, new_co_line in enumerate(new_co_file):
+        if "{}".format(new_co_line) not in old_co_file:
+            co_to_return.append(new_co_line)
+        
+    # Write changes to file
+    with open(repo_file_path, 'w') as file:
+        file.writelines(co_to_return)
+
+if __name__ == "__main__":
+	main()

@@ -1,0 +1,32 @@
+# List orgs and repos here
+orgs:
+    your_org1:
+        repos:
+            - repo1
+            - repo2
+    your_org2:
+        repos: [repo1, repo2]
+        
+# General required configs here
+general:
+    branch:
+        branch_name: codeowners-file
+        create_branch: yes
+    commit:
+        git_add:
+            - .github/CODEOWNERS
+        commit_message: Add/Update CODEOWNERS
+    pull_request:
+        create_pr: yes
+        title: Add/Update CODEOWNERS
+        body: Add line to CODEOWNES, or add file if it doesn't exist
+        base: master
+    remove_repo: yes
+    remove_tmp_dir: yes
+
+# Variables needed in action file
+extra_vars:
+    # CODEOWNERS file in repo
+    old_codeowners: .github/CODEOWNERS
+    # Local path to CODEOWNERS to merge into repo's CODEOWNERS
+    new_codeowners: /local/path/to/git-manager/actions/merge-codeowners-files/CODEOWNERS
