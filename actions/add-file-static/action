@@ -22,7 +22,7 @@ def main():
     config = get_config(curr_dir)
     source_file = config['extra_vars']['source_file']
     destination_file = config['extra_vars']['destination_file']
-    repo_local_dir = sys.argv[1]
+    repo_local_dir = os.environ["GIT_MANAGER_CURR_REPO"]
     
     # If the destination file is in a file path
     # Create the file path in the repo, if it doesn't exist

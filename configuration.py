@@ -55,7 +55,7 @@ class configuration:
 
         # Create a python dictionary of the config
         try:
-            config = yaml.load(config_content, Loader=yaml.FullLoader)
+            config = yaml.load(config_content, Loader=yaml.SafeLoader)
         except yaml.YAMLError as error:
             self.error_message("Error in configuration file: {}!".format(error))
 
@@ -63,6 +63,8 @@ class configuration:
 
     # Validates this config for required fields
     # Exits with exit code 1 if the config is missing required fields
+    # FIXME: DOES NOT VALIDATE ['repos'] parameter after each org. Will cause weird errors if not caught.
+    # FIXME: DOES NOT VALIDATE git_add parameters are a list. Causes weird errors
     def __validate(self):
         self.__LOGGER.info("Validating config...")
 

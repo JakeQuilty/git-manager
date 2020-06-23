@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import os
 from os import path
 import tempfile
 from subprocess import check_output
@@ -56,6 +57,8 @@ def create_working_dir():
 	return dir_path
 
 # creates a list of repo objects from the config
+# config - dict object
+# working_dir - tmp dir that holds the cloned repos
 def create_repo_list(config, working_dir):
 	repo_list = []
 	for curr_org, value in config['orgs'].items():
@@ -80,7 +83,6 @@ def update_single_repo(config, repo, action_dir):
 	repo.git_checkout(branch)
 
 	# run action file on repo
-	# this needs some serious thought and work.
 	LOGGER.info("Running action on: {}".format(repo.get_title()))
 	run_action(action_dir, repo.get_dir())
 
@@ -105,10 +107,13 @@ def update_single_repo(config, repo, action_dir):
 		if pr_link is not None:
 			PR_LINKS.append(pr_link)
 
+# TODO: this needs some serious thought and work.
 def run_action(action_dir, repo_dir):
 	run_path = path.join(action_dir, "action")
-	command = [run_path, str(repo_dir)]
-	subprocess_command(command, None)
+
+	# Set env variable GIT_MANAGER_CURR_REPO to the path to the current repo
+	os.environ["GIT_MANAGER_CURR_REPO"] = str(repo_dir)
+	subprocess_command(run_path, None)
 
 def subprocess_command(command, working_dir):
 	LOGGER.info("Executing: {}".format(" ".join(command)))
