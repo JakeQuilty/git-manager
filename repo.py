@@ -3,6 +3,9 @@ import os
 import requests
 from subprocess import check_output
 
+###
+#  FIXME: This class needs to be redone with api calls instead of commands
+#  https://github.com/JakeQuilty/git-manager/issues/1
 class repo:
 
     def __init__(self, logger, org, repo, tmp_dir):
