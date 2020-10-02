@@ -41,6 +41,7 @@ class configuration:
     def error_message(self, message):
         self.__LOGGER.error(message)
         self.__LOGGER.info("------------------ ENDING ------------------")
+        print(message)
         exit(1)
 
     # Gets `config.yml` from the action directory and returns it as a dictionary object

@@ -25,5 +25,8 @@ general:
 
 # Variables needed in action file
 extra_vars:
+    # Path to license file in repo
+    # ex) just 'LICENSE' if in top level of repo(git-manager/LICENSE)
+    license_file:
     from_year:
     to_year:
