@@ -113,13 +113,18 @@ def run_action(action_dir, repo_dir):
 
 	# Set env variable GIT_MANAGER_CURR_REPO to the path to the current repo
 	os.environ["GIT_MANAGER_CURR_REPO"] = str(repo_dir)
-	subprocess_command(run_path, None)
+	try:
+		subprocess_command(run_path, None)
+	except PermissionError as e:
+		msg = "{}\nTry 'chmod +x {}'".format(str(e), run_path)
+		raise RuntimeError(msg)
 
 def subprocess_command(command, working_dir):
 	LOGGER.info("Executing: {}".format(" ".join(command)))
 	command_output = check_output(command, cwd = working_dir).decode('utf-8')
 	if len(command_output) > 0:
             LOGGER.info("Response:\n{}".format(command_output))
+	LOGGER.info("Finished executing: success")
 
 def update_all_repos(config, repo_list, action_dir):
 	for curr_repo in repo_list:
@@ -128,8 +133,12 @@ def update_all_repos(config, repo_list, action_dir):
 			print("{}: SUCCESS".format(curr_repo.get_title()))
 			LOGGER.info("{}: SUCCESS\n".format(curr_repo.get_title()))
 			SUCCESFUL_REPOS.append(curr_repo.get_title())
+		# All RuntimeErrors kill the app
+		except RuntimeError as e:
+			print(str(e))
+			exit(1)
 		except:
-			LOGGER.error("{}: FAIL\n".format(curr_repo.get_title()))
+			LOGGER.error("{}: FAIL({})\n".format(curr_repo.get_title()))
 			FAILED_REPOS.append(curr_repo.get_title())
 
 		if config['general']['remove_repo']:
