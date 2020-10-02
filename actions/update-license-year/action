@@ -22,7 +22,7 @@ def main():
     config = get_config(curr_dir)
     repo_local_dir = os.environ["GIT_MANAGER_CURR_REPO"]
     
-    repo_file_path = path.join(repo_local_dir, "LICENSE")
+    repo_file_path = path.join(repo_local_dir, config['extra_vars']['license_file'])
     
     with open(repo_file_path, 'r') as file:
         license_file = file.readlines()
