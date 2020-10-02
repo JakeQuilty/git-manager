@@ -5,7 +5,8 @@ Manage a large amount of GitHub repositories at once.
 ## Requirements
 
 Install requirements:
-```
+
+```bash
 pip3 install -r requirements.txt
 ```
 
@@ -14,18 +15,20 @@ pip3 install -r requirements.txt
 1. Pick an action from `actions/`
 1. Fill out `config.yml`. See [Config Files](#config-files) for details.
 1. Set up how you're [authenticating with GitHub](#github-authentication)
-1.  Run
+1. Run
     `./git-manager {ACTION DIR}`
 
     Example:
-    ```
-    ./git-manager ./action/add-file-static
+
+    ```bash
+    ./git-manager ./actions/add-file-static
     ```
 
 ## Config Files
 
-### Empty Config:
-```
+### Empty Config
+
+```yaml
 # List orgs and repos here
 orgs:
     your_org1:
@@ -42,7 +45,7 @@ general:
         create_branch:
     commit:
         git_add:
-        commit_message: 
+        commit_message:
     pull_request:
         create_pr:
         title:
@@ -56,7 +59,6 @@ extra_vars:
 ```
 
 ### Details
-
 
 **orgs** - List of GitHub organizations or users that own the repositories
 
@@ -121,7 +123,8 @@ make sure to [authorize your personal access token](https://help.github.com/en/g
   `GITHUB_AUTH_TOKEN`
 
 1. To start, run
-   ```
+
+   ```bash
    ./git-manager {ACTION DIR}
    ```
 
@@ -131,7 +134,8 @@ make sure to [authorize your personal access token](https://help.github.com/en/g
    [Summon](https://github.com/cyberark/summon) and the [keyring provider](https://github.com/cyberark/summon-keyring/).
 
    To do this, add your auth token to your keyring by running:
-   ```
+
+   ```bash
    security add-generic-password \
      -s "summon" \
      -a "github/api_token" \
@@ -141,7 +145,8 @@ make sure to [authorize your personal access token](https://help.github.com/en/g
 1. Update [`secrets.yml`](secrets.yml) to include your github username.
 
 1. To start, run
-   ```
+
+   ```bash
    summon -p keyring.py ./git-manager {ACTION DIR}
    ```
 
@@ -154,4 +159,3 @@ The `action` script must be able to be executed with `./path/action`.
 
 `git-manager` passes the path to the current repo to `action` by setting the `GIT_MANAGER_CURR_REPO` environment
 variable, before calling the action.
- 
