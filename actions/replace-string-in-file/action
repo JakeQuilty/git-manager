@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import shutil
+import sys
+import os
+import yaml
+
+from os import path
+from pathlib import Path
+
+def get_config(action_dir):
+	config_file_path = action_dir + "/config.yml"
+	config_content = open(config_file_path, 'r').read()
+	config = yaml.load(config_content, Loader=yaml.SafeLoader)
+
+	return config
+
+def main():
+    # Path to current working directory
+    curr_dir = os.path.dirname(os.path.realpath(__file__))
+    config = get_config(curr_dir)
+    repo_local_path = os.environ["GIT_MANAGER_CURR_REPO"]
+    
+    file_to_edit_path = path.join(repo_local_path, config['extra_vars']['file'])
+    
+    with open(file_to_edit_path, 'r') as file:
+        file_to_edit = file.readlines()
+
+    old_string = config['extra_vars']['old_string']
+    new_string = config['extra_vars']['new_string']
+    replace_all = config['extra_vars']['replace_all']
+
+    # Replace all instances of <old_string> with <new_string>
+    for index, curr_line in enumerate(file_to_edit):
+        if old_string in curr_line:
+            file_to_edit[index] = curr_line.replace(old_string, new_string)
+            # stop after first change?
+            if not replace_all:
+                break
+    
+    # Write changes to file
+    with open(file_to_edit_path, 'w') as file:
+        file.writelines(file_to_edit)
+
+if __name__ == "__main__":
+	main()

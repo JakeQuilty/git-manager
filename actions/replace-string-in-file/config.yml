@@ -1,0 +1,71 @@
+# List orgs and repos here
+orgs:
+    CyberArk:
+        repos:
+            - conjur-cli
+            - conjur-credentials-plugin
+            - ansible-conjur-host-identity
+            - terraform-provider-conjur
+            - slosilo
+            - parse-a-changelog
+            - conjur-api-go
+            - summon-aws-secrets
+            - summon-keyring
+            - conjur-oss-suite-release
+            - summon-s3
+            - conjur-google-cloud-marketplace
+            - summon-chefapi
+            - conjur-puppet
+            - secrets-provider-for-k8s
+            - bash-lib
+            - conjur-quickstart
+            - conjur-api-dotnet
+            - summon
+            - conjur-api-java
+            - conjur-oss-helm-chart
+            - ansible-conjur-collection
+            - conjur-base-image
+            - dev-flow
+            - conjur-authn-iam-client-python
+            - summon-conjur
+            - cloudfoundry-conjur-buildpack
+            - conjur-api-python3
+            - kubernetes-conjur-deploy
+            - sidecar-injector
+            - conjur
+            - conjur-service-broker
+            - secretless-broker
+            - conjur-authn-k8s-client
+            - conjur-action
+            - conjur-spring-boot-plugin
+        
+# General required configs here
+general:
+    branch:
+        branch_name: update-pr-template-community-80
+        create_branch: yes
+    commit:
+        git_add:
+            - .github/PULL_REQUEST_TEMPLATE.md
+        commit_message: Update PR template wording
+    pull_request:
+        create_pr: yes
+        title: Update PR Template to use GitHub Keywords
+        body: https://github.com/cyberark/community/issues/80
+        base: master
+    remove_repo: yes
+    remove_tmp_dir: yes
+
+# Variables needed in action file
+extra_vars:
+    # Path to file to be edited. Assume file path from inside repo folder
+    # ex) actions/replace-string-in-file/config.yml
+    file: .github/PULL_REQUEST_TEMPLATE.md
+    # String to replace
+    old_string: Connected to
+    # New value to change to
+    new_string: Resolves
+    # Replace all occurences of <old_string> with <new_string>
+    # 'yes' - Replace all
+    # 'no' - Replace only first occurence
+    replace_all: no
